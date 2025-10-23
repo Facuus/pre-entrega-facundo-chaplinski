@@ -15,8 +15,11 @@ public class Main {
     private static final ProductoService productoService = new ProductoService();
 
     public static void main(String[] args) {
-        productoService.agregar("Café Premium", 3500.50, 20);
-        productoService.agregar("Té Verde", 2100, 35);
+
+        /* 
+        productoService.agregar("Choco", 3500.50, 20);
+        productoService.agregar("perra", 2100, 35);
+        */
 
         boolean salir = false;
         while (!salir) {
@@ -96,7 +99,7 @@ public class Main {
         }
 
         if (encontrado == null) {
-            System.out.println("No se encontró el producto.\n");
+            System.out.println("No se encontro el producto.\n");
             return;
         }
 
@@ -127,19 +130,19 @@ public class Main {
         int id = leerInt("Ingrese el ID del producto a eliminar: ");
         Producto p = productoService.buscarPorId(id);
         if (p == null) {
-            System.out.println("No se encontró ese ID.\n");
+            System.out.println("No se encontro ese ID.\n");
             return;
         }
 
         System.out.println("Seleccionado: " + p.getNombre() + " (stock " + p.getStock() + ")");
-        System.out.print("¿Está seguro que desea eliminarlo? (s/n): ");
+        System.out.print("¿Esta seguro que desea eliminarlo? (s/n): ");
         String resp = sc.nextLine().trim();
         if (resp.equalsIgnoreCase("s")) {
             boolean ok = productoService.eliminar(id);
             if (ok) System.out.println("Producto eliminado.\n");
             else System.out.println("No se pudo eliminar.\n");
         } else {
-            System.out.println("Operación cancelada.\n");
+            System.out.println("Operacion cancelada.\n");
         }
     }
 
@@ -151,7 +154,7 @@ public class Main {
             try {
                 return Integer.parseInt(s.trim());
             } catch (NumberFormatException e) {
-                System.out.println("Ingrese un número entero válido.");
+                System.out.println("Ingrese un numero entero valido.");
             }
         }
     }
@@ -163,7 +166,7 @@ public class Main {
             try {
                 return Double.parseDouble(s.trim().replace(',', '.'));
             } catch (NumberFormatException e) {
-                System.out.println("Ingrese un número válido.");
+                System.out.println("Ingrese un numero valido.");
             }
         }
     }
@@ -172,7 +175,7 @@ public class Main {
         System.out.print(prompt);
         String s = sc.nextLine();
         while (s == null || s.isBlank()) {
-            System.out.print("El texto no puede estar vacío. Intente nuevamente: ");
+            System.out.print("El texto no puede estar vacio. Intente nuevamente: ");
             s = sc.nextLine();
         }
         return s.trim();
