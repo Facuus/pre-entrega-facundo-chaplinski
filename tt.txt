@@ -1,0 +1,5 @@
+Compialr
+javac -d out src/com/techlab/excepciones/*.java src/com/techlab/productos/*.java src/com/techlab/pedidos/*.java src/com/techlab/app/Main.java
+
+EJecutar
+java -cp out com.techlab.app.Main
