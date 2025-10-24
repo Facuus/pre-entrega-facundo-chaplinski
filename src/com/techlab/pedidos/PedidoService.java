@@ -1,54 +1,52 @@
 package com.techlab.pedidos;
-// Paquete donde esta la clase. 
+// Paquete donde esta la clase.
 
 import com.techlab.excepciones.StockInsuficienteException;
-// Se importa la excepcion personalizada que se lanza cuando el stock no alcanza.
-
 import com.techlab.productos.Producto;
 import com.techlab.productos.ProductoService;
-// Se importan las clases de productos para poder usarlas dentro de esta clase.
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-// Se importan utilidades de Java: lista dinamica y lector por consola.
 
 // Clase que maneja la logica de los pedidos: crearlos, listarlos y validar stock.
 public class PedidoService {
 
-    // Lista donde se guardan todos los pedidos realizados.
     private final List<Pedido> pedidos = new ArrayList<>();
-
-    // Objeto Scanner para leer datos del usuario desde consola.
     private final Scanner sc = new Scanner(System.in);
 
-    // Metodo que permite crear un nuevo pedido usando los productos existentes.
     public void crearPedido(ProductoService productoService) {
-        // Se crea un nuevo pedido vacio.
         Pedido pedido = new Pedido();
-
         System.out.println("== Crear nuevo pedido ==");
 
-        // Bucle principal que permite agregar varios productos al mismo pedido.
         while (true) {
             System.out.print("Ingrese ID del producto (0 para finalizar): ");
-            String input = sc.nextLine().trim(); // lee el texto y elimina espacios
-            if (input.equals("0")) break; // si se ingresa 0, termina el pedido
+            String input = sc.nextLine().trim();
+            if (input.equals("0")) break;
 
             int id;
             try {
-                id = Integer.parseInt(input); // convierte el texto a numero
+                id = Integer.parseInt(input);
             } catch (NumberFormatException e) {
                 System.out.println("Ingrese un numero valido.\n");
-                continue; // vuelve a pedir el ID
+                continue;
             }
 
-            // Busca el producto por su ID en el servicio de productos.
             Producto producto = productoService.buscarPorId(id);
             if (producto == null) {
                 System.out.println("No existe un producto con ese ID.\n");
-                continue; // vuelve a pedir otro ID
+                continue;
             }
+
+            //  Nueva validacion: si el producto tiene stock 0, no permite avanzar
+            if (producto.getStock() <= 0) {
+                System.out.println("!!! El producto '" + producto.getNombre() + "' está sin stock.\n");
+                continue;
+            }
+
+            //  mensaje de confirmación al seleccionar producto 
+            System.out.printf("Seleccionaste: %s | Precio: $%.2f | Stock disponible: %d%n",
+                    producto.getNombre(), producto.getPrecio(), producto.getStock());
 
             System.out.print("Cantidad deseada: ");
             int cantidad;
@@ -56,44 +54,48 @@ public class PedidoService {
                 cantidad = Integer.parseInt(sc.nextLine().trim());
             } catch (NumberFormatException e) {
                 System.out.println("Ingrese una cantidad valida.\n");
-                continue; // vuelve a pedir cantidad
+                continue;
             }
 
             if (cantidad <= 0) {
                 System.out.println("La cantidad debe ser mayor a 0.\n");
-                continue; // no permite cantidades negativas o cero
+                continue;
             }
 
-            // Se intenta validar y agregar el producto al pedido.
             try {
-                validarStock(producto, cantidad); // verifica si hay stock suficiente
-                pedido.agregarLinea(new LineaPedido(producto, cantidad)); // agrega la linea
-                producto.setStock(producto.getStock() - cantidad); // descuenta del stock
-                System.out.println("Producto agregado al pedido.\n");
-            } catch (StockInsuficienteException e) {
-                // Si no hay stock suficiente, muestra el mensaje de error.
-                System.out.println("!!!! " + e.getMessage() + "\n");
-            }
+                validarStock(producto, cantidad);
+                pedido.agregarLinea(new LineaPedido(producto, cantidad));
+                producto.setStock(producto.getStock() - cantidad);
+                System.out.println(" Producto agregado al pedido.\n");
 
-            //  Este bloque repite la logica anterior (capaz conviene eliminar)
-            // Agrega la linea al pedido y descuenta stock nuevamente.
-            pedido.agregarLinea(new LineaPedido(producto, cantidad));
-            producto.setStock(producto.getStock() - cantidad);
-            System.out.println("Producto agregado al pedido.\n");
+            } catch (StockInsuficienteException e) {
+                System.out.println("!!!! " + e.getMessage());
+
+                // Preguntar si desea continuar igual con el stock disponible
+                System.out.print("¿Desea continuar con las " + producto.getStock() +
+                        " unidades disponibles? (s/n): ");
+                String respuesta = sc.nextLine().trim().toLowerCase();
+
+                if (respuesta.equals("s")) {
+                    int disponible = producto.getStock();
+                    pedido.agregarLinea(new LineaPedido(producto, disponible));
+                    producto.setStock(0);
+                    System.out.println("Producto agregado con " + disponible + " unidades.\n");
+                } else {
+                    System.out.println("Producto no agregado al pedido.\n");
+                }
+            }
         }
 
-        // Si el pedido no tiene productos, se cancela.
         if (pedido.getLineas().isEmpty()) {
             System.out.println("Pedido vacio, cancelado.\n");
         } else {
-            // Si tiene productos, se guarda en la lista y se muestra el total.
             pedidos.add(pedido);
             System.out.printf("Pedido #%d creado con exito. Total: $%.2f%n%n",
                     pedido.getId(), pedido.calcularTotal());
         }
     }
 
-    // Metodo para mostrar todos los pedidos registrados.
     public void listarPedidos() {
         if (pedidos.isEmpty()) {
             System.out.println("No hay pedidos registrados.\n");
@@ -101,7 +103,6 @@ public class PedidoService {
         }
 
         System.out.println("== Listado de pedidos ==");
-        // Recorre todos los pedidos y los imprime uno por uno.
         for (Pedido p : pedidos) {
             System.out.println(p);
             System.out.println("-------------------------------------");
@@ -109,12 +110,11 @@ public class PedidoService {
         System.out.println();
     }
 
-    // ==============================================================
+    // ============24/10
     //  Metodo privado: valida si hay stock suficiente antes de vender
-    // ==============================================================
+
     private void validarStock(Producto producto, int cantidad)
             throws StockInsuficienteException {
-        // Si la cantidad pedida supera el stock disponible, lanza excepcion.
         if (cantidad > producto.getStock()) {
             throw new StockInsuficienteException(
                     String.format("Stock insuficiente para %s. Disponible: %d unidades.",
